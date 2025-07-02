@@ -1,0 +1,268 @@
+/* Base container styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f5f7fa;
+  color: #222;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode */
+.container.dark {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+.container.dark input,
+.container.dark textarea,
+.container.dark select {
+  background-color: #1f1f1f;
+  color: #ffffff;
+  border: 1px solid #444;
+}
+
+/* Logo & header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.logo {
+  height: 50px;
+}
+
+h1 {
+  font-size: 28px;
+  margin: 0;
+}
+
+/* Mode toggle */
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #4caf50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Input styles */
+input[type="text"],
+select {
+  padding: 0.5rem;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin: 0.3rem 0.5rem;
+  width: 250px;
+}
+
+/* Buttons */
+button {
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  margin: 0.4rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #303f9f;
+}
+
+/* Inputs section */
+.filename-input {
+  margin-bottom: 20px;
+}
+
+/* Template action row */
+.template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+/* Editor box */
+.editor-box {
+  padding: 2rem;
+  background-color: #f0f4f8;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.container.dark .editor-box {
+  background-color: #1c1c1c;
+}
+
+/* Output textarea */
+.output-textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 250px;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+/* Preview layout */
+.editor-preview-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.editor-preview-grid > div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-preview-grid h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 1rem;
+  background: linear-gradient(to right, #6a11cb, #2575fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Live Preview Box */
+.live-preview-box {
+  flex: 1;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.container.dark .live-preview-box {
+  background-color: #1c1c1c;
+}
+
+/* Live Preview Content */
+.live-preview {
+  flex: 1;
+  width: 100%;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 6px;
+  background-color: white;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.container.dark .live-preview {
+  background-color: #2a2a2a;
+}
+
+/* Responsive for small screens */
+@media (max-width: 768px) {
+  .editor-preview-grid {
+    flex-direction: column;
+  }
+}
+
+/* Download Button */
+.download-btn {
+  display: block;
+  margin: 20px auto 40px; /* 20px top, auto horizontal, 40px bottom */
+  font-size: 16px;
+  padding: 12px 25px;
+  background-color: #2ecc71;
+}
+
+
+.download-btn:hover {
+  background-color: #27ae60;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f0f7ff; /* light blue background */
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 20px auto;
+  width: fit-content;
+}
+
+.logo {
+  width: 60px; /* Adjust if needed */
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.title {
+  color: #1259d4;
+  text-align: center;
+  font-size: 2rem;
+  margin: 0;
+}
+
+
