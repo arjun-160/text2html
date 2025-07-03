@@ -382,6 +382,13 @@ function App() {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
 
+    // Remove all <img> tags with src containing 'https://i.ibb.co/GvJxByXs'
+    Array.from(tempDiv.querySelectorAll('img')).forEach(img => {
+      if (img.src.includes('https://i.ibb.co/GvJxByXs')) {
+        img.parentNode.removeChild(img);
+      }
+    });
+
     // For each <p> tag
     Array.from(tempDiv.querySelectorAll('p')).forEach(p => {
       let newNodes = [];
@@ -467,22 +474,6 @@ function App() {
     showSnackbar("Editor cleared");
   };
 
-  // Drag & drop image upload
-  const uploadToImgBB = async (file) => {
-    const formData = new FormData();
-    formData.append("image", file);
-    const apiKey = "c87124780928aaf936d01d3a57209e62";
-    try {
-      const response = await axios.post(
-        `https://api.imgbb.com/1/upload?key=${apiKey}`,
-        formData
-      );
-      return response.data.data.url;
-    } catch {
-      throw new Error("Image upload failed");
-    }
-  };
-
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e) => {
@@ -559,7 +550,7 @@ function App() {
                       {(template.tags || []).map(tag => <Chip key={tag} label={tag} size="small" />)}
                     </Stack>
                   </MenuItem>
-                ))}
+          ))}
               </Select>
             </FormControl>
             <Tooltip title="Save (Ctrl+S)"><span><IconButton color="primary" onClick={saveTemplate}><Save /></IconButton></span></Tooltip>
@@ -629,48 +620,36 @@ function App() {
             plugins: "image code",
             toolbar:
               "undo redo | fontselect fontsizeselect | bold italic underline | alignleft aligncenter alignright | image | code",
-            automatic_uploads: true,
+            automatic_uploads: false,
             file_picker_types: 'image',
-            images_upload_handler: async (blobInfo, success, failure) => {
-              try {
-                const url = await uploadToImgBB(blobInfo.blob());
-                success(url);
-              } catch (error) {
-                failure("Image upload failed");
-              }
+            images_upload_handler: (blobInfo, success, failure) => {
+              const fileName = blobInfo.filename();
+              success(fileName);
             },
             file_picker_callback: function (callback, value, meta) {
               if (meta.filetype === 'image') {
                 const input = document.createElement('input');
                 input.setAttribute('type', 'file');
                 input.setAttribute('accept', 'image/*');
-                input.onchange = async function () {
+                input.onchange = function () {
                   const file = this.files[0];
-                  try {
-                    const url = await uploadToImgBB(file);
-                    callback(url, { alt: file.name });
-                  } catch (error) {
-                        showSnackbar("Upload failed!", 'error');
+                  if (file) {
+                    callback(file.name, { alt: file.name });
                   }
                 };
                 input.click();
               }
-                },
-                setup: (editor) => {
-                  editor.on('drop', async (e) => {
-                    e.preventDefault();
-                    const file = e.dataTransfer.files[0];
-                    if (file && file.type.startsWith('image/')) {
-                      try {
-                        const url = await uploadToImgBB(file);
-                        editor.insertContent(`<img src='${url}' alt='${file.name}' />`);
-                      } catch {
-                        showSnackbar("Image upload failed", 'error');
-                      }
-                    }
-                  });
+            },
+            setup: (editor) => {
+              editor.on('drop', (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                  editor.insertContent(`<img src='${file.name}' alt='${file.name}' />`);
                 }
-              }}
+              });
+            }
+          }}
               value={html}
           onEditorChange={(content) => setHtml(content)}
         />
@@ -734,9 +713,9 @@ function App() {
                     />
                   }
                   label="Import as new template (don't overwrite current content)"
-                />
+          />
               </Box>
-              
+
               <Box>
                 <Typography variant="h6" gutterBottom>Suggested Tags</Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
