@@ -14,7 +14,7 @@ const setImportHistory = (history) => localStorage.setItem("import_history", JSO
 function App() {
   // State
   const [html, setHtml] = useState("");
-  const [fileName, setFileName] = useState("label-template");
+  const [fileName, setFileName] = useState("sample-template");
   const [darkMode, setDarkMode] = useState(false);
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -377,18 +377,71 @@ function App() {
   };
   const removeTag = (tag) => setTemplateTags(templateTags.filter(t => t !== tag));
 
+  // Process HTML to move images outside of p tags
+  const processHTMLForFlutter = (htmlContent) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+
+    // For each <p> tag
+    Array.from(tempDiv.querySelectorAll('p')).forEach(p => {
+      let newNodes = [];
+      let buffer = '';
+
+      // Go through all child nodes of the <p>
+      p.childNodes.forEach(node => {
+        if (node.nodeType === 1 && node.tagName.toLowerCase() === 'img') {
+          // If there's buffered text, create a <p> for it
+          if (buffer.trim()) {
+            const newP = document.createElement('p');
+            newP.innerHTML = buffer;
+            newNodes.push(newP);
+            buffer = '';
+          }
+          // Move the image out
+          newNodes.push(node.cloneNode(true));
+        } else {
+          // Buffer text and other nodes
+          buffer += node.outerHTML || node.textContent;
+        }
+      });
+
+      // If there's remaining text, create a <p> for it
+      if (buffer.trim()) {
+        const newP = document.createElement('p');
+        newP.innerHTML = buffer;
+        newNodes.push(newP);
+      }
+
+      // Replace the original <p> with the new nodes
+      newNodes.forEach(newNode => p.parentNode.insertBefore(newNode, p));
+      p.remove();
+    });
+
+    return tempDiv.innerHTML;
+  };
+
   // Download HTML
   const downloadHTML = () => {
     if (!html) {
       showSnackbar("Nothing to download!", 'error');
       return;
     }
-    const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+    
+    // Process the HTML to move images outside of p tags
+    const processedHTML = processHTMLForFlutter(html);
+    
+    const blob = new Blob([processedHTML], { type: "text/html;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `${fileName || "label-template"}.html`;
     link.click();
-    showSnackbar("HTML file downloaded");
+    
+    // Refresh the page after download to reflect changes
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+    
+    showSnackbar("HTML file downloaded and processed for Flutter compatibility");
   };
 
   // Print
@@ -408,7 +461,7 @@ function App() {
   // Clear editor
   const clearEditor = () => {
     setHtml("");
-    setFileName("label-template");
+    setFileName("sample-template");
     setTemplateTags([]);
     if (editorRef.current) editorRef.current.setContent("");
     showSnackbar("Editor cleared");
@@ -493,13 +546,13 @@ function App() {
             <FormControl size="small" sx={{ minWidth: 200 }}>
               <InputLabel>Saved Templates</InputLabel>
               <Select
-                value={selectedTemplate}
+          value={selectedTemplate}
                 label="Saved Templates"
                 onChange={e => setSelectedTemplate(e.target.value)}
                 renderValue={val => val || '-- Select --'}
-              >
+        >
                 <MenuItem value="">-- Select --</MenuItem>
-                {filteredTemplates.map((template) => (
+          {filteredTemplates.map((template) => (
                   <MenuItem key={template.name} value={template.name}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography>{template.name}</Typography>
@@ -567,41 +620,41 @@ function App() {
           </Box>
           
           <Box sx={{ my: 2 }}>
-            <Editor
-              onInit={(evt, editor) => (editorRef.current = editor)}
-              apiKey="1elgs8lygnseriu4s0ytx880rvobuf0jr4jc7dbn81cvjji6"
-              init={{
+        <Editor
+          onInit={(evt, editor) => (editorRef.current = editor)}
+          apiKey="1elgs8lygnseriu4s0ytx880rvobuf0jr4jc7dbn81cvjji6"
+          init={{
                 height: 400,
-                menubar: false,
-                plugins: "image code",
-                toolbar:
-                  "undo redo | fontselect fontsizeselect | bold italic underline | alignleft aligncenter alignright | image | code",
-                automatic_uploads: true,
-                file_picker_types: 'image',
-                images_upload_handler: async (blobInfo, success, failure) => {
+            menubar: false,
+            plugins: "image code",
+            toolbar:
+              "undo redo | fontselect fontsizeselect | bold italic underline | alignleft aligncenter alignright | image | code",
+            automatic_uploads: true,
+            file_picker_types: 'image',
+            images_upload_handler: async (blobInfo, success, failure) => {
+              try {
+                const url = await uploadToImgBB(blobInfo.blob());
+                success(url);
+              } catch (error) {
+                failure("Image upload failed");
+              }
+            },
+            file_picker_callback: function (callback, value, meta) {
+              if (meta.filetype === 'image') {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+                input.onchange = async function () {
+                  const file = this.files[0];
                   try {
-                    const url = await uploadToImgBB(blobInfo.blob());
-                    success(url);
+                    const url = await uploadToImgBB(file);
+                    callback(url, { alt: file.name });
                   } catch (error) {
-                    failure("Image upload failed");
-                  }
-                },
-                file_picker_callback: function (callback, value, meta) {
-                  if (meta.filetype === 'image') {
-                    const input = document.createElement('input');
-                    input.setAttribute('type', 'file');
-                    input.setAttribute('accept', 'image/*');
-                    input.onchange = async function () {
-                      const file = this.files[0];
-                      try {
-                        const url = await uploadToImgBB(file);
-                        callback(url, { alt: file.name });
-                      } catch (error) {
                         showSnackbar("Upload failed!", 'error');
-                      }
-                    };
-                    input.click();
                   }
+                };
+                input.click();
+              }
                 },
                 setup: (editor) => {
                   editor.on('drop', async (e) => {
@@ -619,8 +672,8 @@ function App() {
                 }
               }}
               value={html}
-              onEditorChange={(content) => setHtml(content)}
-            />
+          onEditorChange={(content) => setHtml(content)}
+        />
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Box flex={1}>
@@ -628,14 +681,20 @@ function App() {
               <TextField
                 multiline
                 minRows={10}
-                value={html}
+                value={processHTMLForFlutter(html)}
                 fullWidth
                 InputProps={{ readOnly: true }}
                 onFocus={e => e.target.select()}
                 variant="outlined"
                 sx={{ bgcolor: darkMode ? '#232b3b' : '#f7faff', borderRadius: 2 }}
               />
-              <Button startIcon={<Download />} variant="contained" sx={{ mt: 2, bgcolor: '#1976d2', color: '#fff', '&:hover': { bgcolor: '#115293' } }} onClick={downloadHTML}>Download HTML</Button>
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                <Tooltip title="Download HTML file (processed for Flutter compatibility)">
+                  <span>
+                    <Button startIcon={<Download />} variant="contained" sx={{ bgcolor: '#1976d2', color: '#fff', '&:hover': { bgcolor: '#115293' } }} onClick={downloadHTML}>Download HTML</Button>
+                  </span>
+                </Tooltip>
+              </Stack>
             </Box>
             {showPreview && (
               <Box flex={1}>
